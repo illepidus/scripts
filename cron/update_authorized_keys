@@ -1,0 +1,95 @@
+#!/bin/bash
+
+############################################################
+# LINK TO THIS FILE                                        #
+# https://krotarnya.ru/ssh/update_authorized_keys          #
+############################################################
+
+
+############################################################
+# CRON JOB                                                 #
+# */5 * * * * $HOME/scripts/cron/update_authorized_keys    #
+############################################################
+
+############################################################
+# Predefines                                               #
+############################################################
+URL="https://krotarnya.ru/ssh/authorized_keys"
+FILE_NAME="authorized_keys"
+TEMP_PATH="$HOME/$FILE_NAME.tmp"
+DEST_PATH="$HOME/.ssh/$FILE_NAME"
+VERBOSE=0
+
+############################################################
+# Functions                                                #
+############################################################
+display_help()
+{
+	# Display Help
+	echo "Syntax: update_authorized_keys [-h|v] message"
+	echo "options:"
+	echo "-h  Display this Help."
+	echo "-v  Verbose output"
+}
+
+exit_abnormal()
+{
+	display_help
+	exit 1
+}
+
+verbose()
+{
+	[[ $VERBOSE -eq 1 ]] && echo "$1"
+}
+
+############################################################
+# Options                                                  #
+############################################################
+while getopts ":hv" option; do
+	case $option in
+		h)
+			display_help
+			exit 0
+			;;
+		v)
+			VERBOSE=1
+			;;
+		:)
+			echo "Error: -${OPTARG} requires an argument."
+			exit 0
+			;;
+		*)
+			echo "Error: unknown parameter."
+			exit 0
+			;;
+	esac
+done
+
+############################################################
+# Main                                                     #
+############################################################
+verbose "URL = $URL"
+verbose "TEMP_PATH = $TEMP_PATH"
+verbose "DEST_PATH = $DEST_PATH"
+
+wget -q "$URL" -O "$TEMP_PATH"
+if [[ $? -eq 0 ]]; then
+	verbose "Successfully downloaded authorized_keys"
+	touch "$DEST_PATH"
+	cmp --silent "$TEMP_PATH" "$DEST_PATH"
+	if [ $? == "1" ]; then
+		verbose "New authorized_keys differ already known"
+		verbose "Saving new authorized_keys"
+		cp "$TEMP_PATH" "$DEST_PATH"
+		verbose "Setting permissions"
+		chmod 600 "$DEST_PATH" 
+	else
+		verbose "Nothing changed"
+	fi
+	rm "$TEMP_PATH"
+else
+	verbose "Downloading authorized_keys failed"
+fi
+
+exit 0
