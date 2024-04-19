@@ -11,7 +11,8 @@
 URL="https://krotarnya.ru/ssh/authorized_keys"
 FILE_NAME="authorized_keys"
 TEMP_PATH="$HOME/$FILE_NAME.tmp"
-DEST_PATH="$HOME/.ssh/$FILE_NAME"
+DEST_DIR="$HOME/.ssh"
+DEST_PATH="$DEST_DIR/$FILE_NAME"
 VERBOSE=0
 
 ############################################################
@@ -70,6 +71,7 @@ verbose "DEST_PATH = $DEST_PATH"
 wget -q "$URL" -O "$TEMP_PATH"
 if [[ $? -eq 0 ]]; then
 	verbose "Successfully downloaded authorized_keys"
+	mkdir -p "$DEST_DIR"
 	touch "$DEST_PATH"
 	cmp --silent "$TEMP_PATH" "$DEST_PATH"
 	if [ $? == "1" ]; then
